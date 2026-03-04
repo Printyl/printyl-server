@@ -1,0 +1,12 @@
+version: 1
+title: Minimal Example
+description: Minimal LaTeX Example with simple text.
+tex_file: template-1.tex
+template:
+  fields:
+    content-1:
+      name: Main Content
+      description: Main Content Field
+      type: string
+      length: -1 # no length limit
+      multiline: true
