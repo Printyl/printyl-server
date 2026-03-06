@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -28,6 +28,6 @@ func (s *StatusHandler) GetStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(status); err != nil {
-		log.Printf("error encoding response: %v", err)
+		slog.ErrorContext(r.Context(), "error encoding response", slog.String("error", err.Error()))
 	}
 }
