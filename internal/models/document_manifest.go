@@ -29,3 +29,35 @@ type FieldName string
 type Template struct {
 	Fields map[FieldName]Fields `yaml:"fields"`
 }
+
+// FormResponse represents the response by the server
+// It includes fields for every form entry.
+type FormResponse struct {
+	Fields map[FieldName]FieldsFormResponse `json:"fields"`
+}
+
+type FieldsFormResponse struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Length      int    `json:"length"`
+	Multiline   bool   `json:"multiline"`
+	Type        Type   `json:"type"`
+}
+
+func FormResponseFromTemplate(template *Template) FormResponse {
+	form := FormResponse{
+		Fields: make(map[FieldName]FieldsFormResponse),
+	}
+
+	for fieldName, field := range template.Fields {
+		form.Fields[fieldName] = FieldsFormResponse{
+			Name:        field.Name,
+			Description: field.Description,
+			Length:      field.Length,
+			Multiline:   field.Multiline,
+			Type:        field.Type,
+		}
+	}
+
+	return form
+}

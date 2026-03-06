@@ -41,6 +41,9 @@ func NewAPI() *API {
 		return nil
 	}
 
+	v1.documentsHandler.DocumentsService = v1.documentsService
+
+	v1.registerDocumentsObservers()
 	v1.createV1Endpoints()
 
 	api.v1 = v1
@@ -56,17 +59,19 @@ func (api *API) Start() error {
 func (v1 *V1) createV1Endpoints() {
 	v1.router.HandleFunc("/status", v1.statusHandler.GetStatus).Methods("GET")
 	v1.router.HandleFunc("/documents", v1.documentsHandler.GetAllDocuments).Methods("GET")
+	v1.router.HandleFunc("/documents/{id}/form", v1.documentsHandler.GetDocumentForm).Methods("GET")
 }
 
 func (v1 *V1) initDocumentsServiceV1() error {
 	v1.documentsService = service.NewDocumentService(Cfg.DocumentsPath)
-	v1.registrationDocumentsObservers()
 	if err := v1.documentsService.RefreshDocuments(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (v1 *V1) registrationDocumentsObservers() {
+// registerDocumentsObservers registers all observers to DocumentService (v1)
+// Note that DocumentService and all observers have to be initialized.
+func (v1 *V1) registerDocumentsObservers() {
 	v1.documentsService.AddDocumentsObserver(v1.documentsHandler)
 }
