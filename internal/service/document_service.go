@@ -17,7 +17,7 @@ type DocumentService struct {
 	mu            sync.RWMutex
 	documentsPath string
 	Documents     map[string]*models.DocumentManifest
-	docObservers  []DocumentObserver
+	docObservers  []models.DocumentObserver
 }
 
 // NewDocumentService needs a path to the Documents directory.
@@ -66,7 +66,7 @@ func (ds *DocumentService) readStore(documents []os.DirEntry) map[string]*models
 	return docs
 }
 
-func (ds *DocumentService) AddDocumentsObserver(observer DocumentObserver) {
+func (ds *DocumentService) AddDocumentsObserver(observer models.DocumentObserver) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
 	ds.docObservers = append(ds.docObservers, observer)

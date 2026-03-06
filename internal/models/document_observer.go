@@ -1,0 +1,6 @@
+package models
+
+// DocumentObserver gives the possibility for other implementations to observe changes in documents.
+type DocumentObserver interface {
+	OnDocumentsChanged(documents map[string]*DocumentManifest)
+}
