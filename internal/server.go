@@ -30,20 +30,23 @@ func NewAPI() *API {
 		mainRouter: mux.NewRouter(),
 	}
 
+	docService := service.NewDocumentService(Cfg.DocumentsPath)
+
 	v1 := &V1{
 		router:           api.mainRouter.PathPrefix("/api/v1").Subrouter(),
 		documentsHandler: &handlers.DocumentsHandler{},
 		statusHandler:    handlers.NewStatusHandler(),
+		documentsService: docService,
 	}
 
-	if err := v1.initDocumentsServiceV1(); err != nil {
-		slog.ErrorContext(context.Background(), "Failed to initialize documents service v1: %v", err)
+	v1.documentsHandler.DocumentsService = docService
+
+	v1.registerDocumentsObservers()
+	if err := v1.documentsService.RefreshDocuments(); err != nil {
+		slog.ErrorContext(context.Background(), "Failed to initialize documents service v1", slog.String("error", err.Error()))
 		return nil
 	}
 
-	v1.documentsHandler.DocumentsService = v1.documentsService
-
-	v1.registerDocumentsObservers()
 	v1.createV1Endpoints()
 
 	api.v1 = v1
@@ -60,14 +63,6 @@ func (v1 *V1) createV1Endpoints() {
 	v1.router.HandleFunc("/status", v1.statusHandler.GetStatus).Methods("GET")
 	v1.router.HandleFunc("/documents", v1.documentsHandler.GetAllDocuments).Methods("GET")
 	v1.router.HandleFunc("/documents/{id}/form", v1.documentsHandler.GetDocumentForm).Methods("GET")
-}
-
-func (v1 *V1) initDocumentsServiceV1() error {
-	v1.documentsService = service.NewDocumentService(Cfg.DocumentsPath)
-	if err := v1.documentsService.RefreshDocuments(); err != nil {
-		return err
-	}
-	return nil
 }
 
 // registerDocumentsObservers registers all observers to DocumentService (v1)
