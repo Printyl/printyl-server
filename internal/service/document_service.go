@@ -11,6 +11,8 @@ import (
 )
 
 // DocumentService is a central element to handle document related actions.
+// Note that the models.DocumentManifest can have another title than the ID of the document.
+// Title defined in models.DocumentManifest is not unique!
 type DocumentService struct {
 	mu            sync.RWMutex
 	documentsPath string

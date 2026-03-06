@@ -24,7 +24,7 @@ func (h *DocumentsHandler) GetAllDocuments(w http.ResponseWriter, r *http.Reques
 // OnDocumentsChanged keeps documents synchronized with the internal state.
 func (h *DocumentsHandler) OnDocumentsChanged(documents map[string]*models.DocumentManifest) {
 	h.documents = nil
-	for _, doc := range documents {
-		h.documents = append(h.documents, TranslateDocument(doc))
+	for id, doc := range documents {
+		h.documents = append(h.documents, TranslateDocument(doc, id))
 	}
 }
