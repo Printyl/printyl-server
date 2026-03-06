@@ -101,9 +101,5 @@ func (ds *DocumentService) notify() {
 
 // GetManifest returns the document manifest file by parsing <application-root>/documents/<id>/manifest.yaml
 func (ds *DocumentService) GetManifest(id string) (*models.DocumentManifest, error) {
-	if manifest, err := readDocumentManifest(ds.documentsPath, id); err == nil {
-		return manifest, err
-	}
-
-	return &models.DocumentManifest{}, nil
+	return readDocumentManifest(ds.documentsPath, id)
 }
