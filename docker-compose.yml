@@ -7,12 +7,25 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    env_file:
+      - .env
+    user: "1000:1000"
     volumes:
       - type: bind
         source: ./printyl
         target: /printyl
-    env_file:
-      - .env
+  latex:
+    build:
+      context: ./latex-instance
+      dockerfile: Dockerfile
+    user: "1000:1000"
+    cap_drop:
+      - ALL
+    mem_limit: 512m
+    volumes:
+      - type: bind
+        source: ./printyl/jobs
+        target: /jobs
 
 volumes:
   server-data:
