@@ -8,13 +8,18 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gregor-gottschewski/printyl-server/internal/models"
-	"github.com/gregor-gottschewski/printyl-server/internal/service"
 )
+
+// DocumentServicer defines the interface for document service operations.
+// Decouples the handler from the service implementation.
+type DocumentServicer interface {
+	GetManifest(id string) (*models.DocumentManifest, error)
+}
 
 // DocumentsHandler contains DocumentService for managing documents.
 type DocumentsHandler struct {
 	mu               sync.RWMutex
-	DocumentsService *service.DocumentService
+	DocumentsService DocumentServicer
 	documents        []models.Document
 }
 
@@ -44,7 +49,8 @@ func (h *DocumentsHandler) GetDocumentForm(w http.ResponseWriter, r *http.Reques
 	id := mux.Vars(r)["id"]
 	manifest, err := h.DocumentsService.GetManifest(id)
 	if err != nil {
-		slog.ErrorContext(r.Context(), "error getting manifest", slog.String("id", id))
+		slog.ErrorContext(r.Context(), "error getting manifest", slog.String("id", id), slog.String("error", err.Error()))
+		http.Error(w, "document not found", http.StatusNotFound)
 		return
 	}
 
