@@ -22,6 +22,7 @@ type Fields struct {
 	Length      int    `yaml:"length"`
 	Multiline   bool   `yaml:"multiline"`
 	Type        Type   `yaml:"type"`
+	Mandatory   bool   `yaml:"mandatory"`
 }
 
 type FieldName string
@@ -60,4 +61,8 @@ func FormResponseFromTemplate(template *Template) FormResponse {
 	}
 
 	return form
+}
+
+type GenerateRequest struct {
+	Fields map[FieldName]FieldsFormResponse `json:"data"`
 }

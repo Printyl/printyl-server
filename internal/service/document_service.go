@@ -103,3 +103,18 @@ func (ds *DocumentService) notify() {
 func (ds *DocumentService) GetManifest(id string) (*models.DocumentManifest, error) {
 	return readDocumentManifest(ds.documentsPath, id)
 }
+
+// RequiredFieldsFilled checks if all mandatory fields are filled by the client.
+func (ds *DocumentService) RequiredFieldsFilled(manifest *models.DocumentManifest, genReq *models.GenerateRequest) bool {
+	fields := manifest.Template.Fields
+
+	for key, val := range fields {
+		if val.Mandatory {
+			if _, ok := genReq.Fields[key]; !ok {
+				return false
+			}
+		}
+	}
+
+	return true
+}
