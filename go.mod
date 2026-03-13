@@ -5,6 +5,7 @@ go 1.26.0
 require (
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/golangci/golangci-lint v1.64.8
+	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.3
 	github.com/stretchr/testify v1.11.1
