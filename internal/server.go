@@ -22,6 +22,7 @@ type V1 struct {
 	documentsHandler *handlers.DocumentsHandler
 	statusHandler    *handlers.StatusHandler
 	documentsService *service.DocumentService
+	jobService       *service.JobService
 }
 
 // NewAPI creates a new API instance with all endpoints defined for all versions
@@ -37,9 +38,11 @@ func NewAPI() *API {
 		documentsHandler: &handlers.DocumentsHandler{},
 		statusHandler:    handlers.NewStatusHandler(),
 		documentsService: docService,
+		jobService:       service.NewJobService(),
 	}
 
 	v1.documentsHandler.DocumentsService = docService
+	v1.documentsHandler.JobService = v1.jobService
 
 	v1.registerDocumentsObservers()
 	if err := v1.documentsService.RefreshDocuments(); err != nil {
@@ -63,6 +66,7 @@ func (v1 *V1) createV1Endpoints() {
 	v1.router.HandleFunc("/status", v1.statusHandler.GetStatus).Methods("GET")
 	v1.router.HandleFunc("/documents", v1.documentsHandler.GetAllDocuments).Methods("GET")
 	v1.router.HandleFunc("/documents/{id}/form", v1.documentsHandler.GetDocumentForm).Methods("GET")
+	v1.router.HandleFunc("/documents/{id}/generate", v1.documentsHandler.GenerateDocument).Methods("POST")
 }
 
 // registerDocumentsObservers registers all observers to DocumentService (v1)

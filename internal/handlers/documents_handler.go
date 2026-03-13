@@ -17,11 +17,16 @@ type DocumentServicer interface {
 	RequiredFieldsFilled(manifest *models.DocumentManifest, genReq *models.GenerateRequest) bool
 }
 
+type JobServicer interface {
+	AddJob() *models.Job
+}
+
 // DocumentsHandler contains DocumentService for managing documents.
 type DocumentsHandler struct {
 	mu               sync.RWMutex
-	DocumentsService DocumentServicer
 	documents        []models.Document
+	DocumentsService DocumentServicer
+	JobService       JobServicer
 }
 
 // GetAllDocuments writes a list with all documents on system to client.
@@ -85,5 +90,11 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	job := h.JobService.AddJob()
+
+	response := models.JobReponse{UUID: job.UUID}
 	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		slog.ErrorContext(r.Context(), "error encoding response", slog.String("error", err.Error()))
+	}
 }
