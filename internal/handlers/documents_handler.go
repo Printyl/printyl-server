@@ -14,6 +14,7 @@ import (
 // Decouples the handler from the service implementation.
 type DocumentServicer interface {
 	GetManifest(id string) (*models.DocumentManifest, error)
+	RequiredFieldsFilled(manifest *models.DocumentManifest, genReq *models.GenerateRequest) bool
 }
 
 // DocumentsHandler contains DocumentService for managing documents.
@@ -59,4 +60,30 @@ func (h *DocumentsHandler) GetDocumentForm(w http.ResponseWriter, r *http.Reques
 	if err := json.NewEncoder(w).Encode(form); err != nil {
 		slog.ErrorContext(r.Context(), "error encoding response", slog.String("error", err.Error()))
 	}
+}
+
+// GenerateDocument starts a document generation job.
+func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+
+	var req *models.GenerateRequest
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+		slog.ErrorContext(r.Context(), "error decoding request", slog.String("error", err.Error()))
+		http.Error(w, "error decoding request", http.StatusBadRequest)
+		return
+	}
+
+	manifest, err := h.DocumentsService.GetManifest(id)
+	if err != nil {
+		slog.ErrorContext(r.Context(), "error getting manifest", slog.String("id", id))
+		http.Error(w, "requested file unknown", http.StatusNotFound)
+		return
+	}
+
+	if !h.DocumentsService.RequiredFieldsFilled(manifest, req) {
+		http.Error(w, "fill all required fields", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
 }
