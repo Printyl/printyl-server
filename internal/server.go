@@ -31,6 +31,8 @@ func NewAPI() *API {
 		mainRouter: mux.NewRouter(),
 	}
 
+	api.mainRouter.Use(corsMiddleware)
+
 	docService := service.NewDocumentService(Cfg.DocumentsPath)
 
 	v1 := &V1{
@@ -73,4 +75,26 @@ func (v1 *V1) createV1Endpoints() {
 // Note that DocumentService and all observers have to be initialized.
 func (v1 *V1) registerDocumentsObservers() {
 	v1.documentsService.AddDocumentsObserver(v1.documentsHandler)
+}
+
+// corsMiddleware adds CORS headers and handles preflight requests.
+// Allows all! Not production safe.
+func corsMiddleware(next http.Handler) http.Handler {
+	// TODO: Remove for production safe environment
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		if origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		}
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
