@@ -31,8 +31,6 @@ func NewAPI() *API {
 		mainRouter: mux.NewRouter(),
 	}
 
-	api.mainRouter.Use(corsMiddleware)
-
 	docService := service.NewDocumentService(Cfg.DocumentsPath)
 
 	v1 := &V1{
@@ -61,7 +59,7 @@ func NewAPI() *API {
 
 func (api *API) Start() error {
 	slog.InfoContext(context.Background(), fmt.Sprintf("Starting server on :%d", Cfg.Port))
-	return http.ListenAndServe(fmt.Sprintf(":%d", Cfg.Port), api.mainRouter)
+	return http.ListenAndServe(fmt.Sprintf(":%d", Cfg.Port), corsMiddleware(api.mainRouter))
 }
 
 func (v1 *V1) createV1Endpoints() {
