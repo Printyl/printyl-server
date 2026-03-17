@@ -21,6 +21,6 @@ type Job struct {
 	Status    JobStatus
 }
 
-type JobReponse struct {
+type JobResponse struct {
 	UUID uuid.UUID `json:"uuid"`
 }
