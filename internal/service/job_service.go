@@ -10,12 +10,12 @@ import (
 
 type JobService struct {
 	mu   sync.RWMutex
-	Jobs map[string]*models.Job
+	jobs map[string]*models.Job
 }
 
 func NewJobService() *JobService {
 	return &JobService{
-		Jobs: make(map[string]*models.Job),
+		jobs: make(map[string]*models.Job),
 	}
 }
 
@@ -28,7 +28,7 @@ func (s *JobService) AddJob() *models.Job {
 		CreatedAt: time.Now(),
 		Status:    models.JobStatusPending,
 	}
-	s.Jobs[job.UUID.String()] = &job
+	s.jobs[job.UUID.String()] = &job
 
 	return &job
 }

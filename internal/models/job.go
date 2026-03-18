@@ -9,10 +9,10 @@ import (
 type JobStatus string
 
 const (
-	JobStatusFailed    = "failed"
-	JobStatusPending   = "pending"
-	JobStatusRunning   = "running"
-	JobStatusCompleted = "completed"
+	JobStatusFailed    JobStatus = "failed"
+	JobStatusPending   JobStatus = "pending"
+	JobStatusRunning   JobStatus = "running"
+	JobStatusCompleted JobStatus = "completed"
 )
 
 type Job struct {
@@ -21,6 +21,6 @@ type Job struct {
 	Status    JobStatus
 }
 
-type JobReponse struct {
+type JobResponse struct {
 	UUID uuid.UUID `json:"uuid"`
 }

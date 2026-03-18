@@ -92,7 +92,7 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 
 	job := h.JobService.AddJob()
 
-	response := models.JobReponse{UUID: job.UUID}
+	response := models.JobResponse{UUID: job.UUID}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		slog.ErrorContext(r.Context(), "error encoding response", slog.String("error", err.Error()))
