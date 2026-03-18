@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gorilla/mux"
 	"github.com/gregor-gottschewski/printyl-server/internal/handlers"
@@ -31,7 +32,7 @@ func NewAPI() *API {
 		mainRouter: mux.NewRouter(),
 	}
 
-	docService := service.NewDocumentService(Cfg.DocumentsPath)
+	docService := service.NewDocumentService(filepath.Join(Cfg.ApplicationPath, "documents"))
 
 	v1 := &V1{
 		router:           api.mainRouter.PathPrefix("/api/v1").Subrouter(),

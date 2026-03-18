@@ -14,6 +14,6 @@ func LoadConfig() error {
 }
 
 type Config struct {
-	DocumentsPath string `env:"DOCUMENTS_PATH" envDefault:"./printyl/documents"`
-	Port          uint   `env:"PORT" envDefault:"8080"`
+	ApplicationPath string `env:"APP_PATH" envDefault:"./printyl"`
+	Port            uint   `env:"PORT" envDefault:"8080"`
 }
