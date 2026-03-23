@@ -19,15 +19,16 @@ func NewJobService() *JobService {
 	}
 }
 
-func (s *JobService) AddJob(manifest *models.DocumentManifest) *models.Job {
+func (s *JobService) AddJob(manifest *models.DocumentManifest, generateRequest *models.GenerateRequest) *models.Job {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	job := models.Job{
-		UUID:      uuid.New(),
-		CreatedAt: time.Now(),
-		Status:    models.JobStatusPending,
-		Manifest:  manifest,
+		UUID:            uuid.New(),
+		CreatedAt:       time.Now(),
+		Status:          models.JobStatusPending,
+		Manifest:        manifest,
+		GenerateRequest: generateRequest,
 	}
 	s.jobs[job.UUID.String()] = &job
 

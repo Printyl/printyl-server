@@ -19,7 +19,7 @@ type DocumentServicer interface {
 }
 
 type JobServicer interface {
-	AddJob(manifest *models.DocumentManifest) *models.Job
+	AddJob(manifest *models.DocumentManifest, generateRequest *models.GenerateRequest) *models.Job
 }
 
 // DocumentsHandler contains DocumentService for managing documents.
@@ -91,7 +91,7 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	job := h.JobService.AddJob(manifest)
+	job := h.JobService.AddJob(manifest, &req)
 
 	response := models.JobResponse{UUID: job.UUID}
 	w.Header().Set("Content-Type", "application/json")

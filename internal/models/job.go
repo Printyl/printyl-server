@@ -16,10 +16,11 @@ const (
 )
 
 type Job struct {
-	UUID      uuid.UUID
-	CreatedAt time.Time
-	Status    JobStatus
-	Manifest  *DocumentManifest
+	UUID            uuid.UUID
+	CreatedAt       time.Time
+	Status          JobStatus
+	Manifest        *DocumentManifest
+	GenerateRequest *GenerateRequest
 }
 
 type JobResponse struct {
