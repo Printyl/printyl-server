@@ -19,6 +19,7 @@ type Job struct {
 	UUID      uuid.UUID
 	CreatedAt time.Time
 	Status    JobStatus
+	Manifest  *DocumentManifest
 }
 
 type JobResponse struct {

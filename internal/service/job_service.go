@@ -9,7 +9,7 @@ import (
 )
 
 type JobService struct {
-	mu   sync.RWMutex
+	mu   sync.Mutex
 	jobs map[string]*models.Job
 }
 
@@ -19,7 +19,7 @@ func NewJobService() *JobService {
 	}
 }
 
-func (s *JobService) AddJob() *models.Job {
+func (s *JobService) AddJob(manifest *models.DocumentManifest) *models.Job {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -27,6 +27,7 @@ func (s *JobService) AddJob() *models.Job {
 		UUID:      uuid.New(),
 		CreatedAt: time.Now(),
 		Status:    models.JobStatusPending,
+		Manifest:  manifest,
 	}
 	s.jobs[job.UUID.String()] = &job
 

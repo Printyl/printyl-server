@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gregor-gottschewski/printyl-server/internal/models"
+	"github.com/gregor-gottschewski/printyl-server/internal/service"
 )
 
 // DocumentServicer defines the interface for document service operations.
@@ -18,7 +19,7 @@ type DocumentServicer interface {
 }
 
 type JobServicer interface {
-	AddJob() *models.Job
+	AddJob(manifest *models.DocumentManifest) *models.Job
 }
 
 // DocumentsHandler contains DocumentService for managing documents.
@@ -90,7 +91,7 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	job := h.JobService.AddJob()
+	job := h.JobService.AddJob(manifest)
 
 	response := models.JobResponse{UUID: job.UUID}
 	w.Header().Set("Content-Type", "application/json")
