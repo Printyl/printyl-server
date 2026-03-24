@@ -98,4 +98,19 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		slog.ErrorContext(r.Context(), "error encoding response", slog.String("error", err.Error()))
 	}
+
+	preCompService := service.NewPreCompileService(*job)
+
+	if err := preCompService.CreateTempCompileDirectory(); err != nil {
+		slog.ErrorContext(r.Context(), "error creating temp compile directory", slog.String("error", err.Error()))
+	}
+
+	if err := preCompService.CopyTemplate(manifest.TexFile); err != nil {
+		slog.ErrorContext(r.Context(), "error copying template", slog.String("error", err.Error()))
+	}
+
+	if err := preCompService.InsertPlaceholder(); err != nil {
+		slog.ErrorContext(r.Context(), "error inserting placeholder", slog.String("error", err.Error()))
+	}
+
 }
