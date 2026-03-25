@@ -9,13 +9,15 @@ import (
 )
 
 type JobService struct {
-	mu   sync.Mutex
-	jobs map[string]*models.Job
+	mu       sync.Mutex
+	jobs     map[string]*models.Job
+	jobQueue *[]string
 }
 
 func NewJobService() *JobService {
 	return &JobService{
-		jobs: make(map[string]*models.Job),
+		jobs:     make(map[string]*models.Job),
+		jobQueue: new([]string),
 	}
 }
 
@@ -31,6 +33,40 @@ func (s *JobService) AddJob(manifest *models.DocumentManifest, generateRequest *
 		GenerateRequest: generateRequest,
 	}
 	s.jobs[job.UUID.String()] = &job
+	*s.jobQueue = append(*s.jobQueue, job.UUID.String())
 
 	return &job
+}
+
+func (s *JobService) SetStatus(uuid uuid.UUID, status models.JobStatus) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	job, ok := s.jobs[uuid.String()]
+	if !ok {
+		return
+	}
+
+	job.Status = status
+}
+
+// Dequeue pops n elements from the queue as copy
+func (s *JobService) Dequeue(elements int) []models.Job {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	limit := elements
+	if limit > len(*s.jobQueue) {
+		limit = len(*s.jobQueue)
+	}
+
+	ids := (*s.jobQueue)[:limit]
+	*s.jobQueue = (*s.jobQueue)[limit:]
+
+	jobs := make([]models.Job, len(ids))
+	for i, id := range ids {
+		jobs[i] = *s.jobs[id]
+	}
+
+	return jobs
 }
