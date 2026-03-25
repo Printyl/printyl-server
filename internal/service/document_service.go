@@ -103,9 +103,14 @@ func (ds *DocumentService) notify() {
 func (ds *DocumentService) RequiredFieldsFilled(manifest *models.DocumentManifest, genReq *models.GenerateRequest) bool {
 	fields := manifest.Template.Fields
 
+	fieldMap := make(map[string]struct{})
+	for _, f := range *genReq.Fields {
+		fieldMap[f.Name] = struct{}{}
+	}
+
 	for key, val := range fields {
 		if val.Mandatory {
-			if _, ok := genReq.Fields[key]; !ok {
+			if _, ok := fieldMap[string(key)]; !ok {
 				return false
 			}
 		}
