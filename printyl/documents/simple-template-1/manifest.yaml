@@ -10,3 +10,11 @@ template:
       type: string
       length: -1 # no length limit
       multiline: true
+      mandatory: true
+    chapter:
+      name: Chapter Heading test
+      description: Main Chapter Heading
+      type: string
+      length: 50
+      multiline: false
+      mandatory: true
