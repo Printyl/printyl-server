@@ -75,12 +75,14 @@ func (p *PreCompileService) InsertPlaceholder() error {
 	scanner := bufio.NewScanner(in)
 	for scanner.Scan() {
 		line := scanner.Text()
-		for _, field := range *p.Job.GenerateRequest.Fields {
-			if len(field.Value) == 0 {
-				line = strings.ReplaceAll(line, fmt.Sprintf("{{%s}}", field.Name), "")
-				continue
+		if p.Job.GenerateRequest.Fields != nil {
+			for _, field := range *p.Job.GenerateRequest.Fields {
+				if len(field.Value) == 0 {
+					line = strings.ReplaceAll(line, fmt.Sprintf("{{%s}}", field.Name), "")
+					continue
+				}
+				line = strings.ReplaceAll(line, fmt.Sprintf("{{%s}}", field.Name), field.Value)
 			}
-			line = strings.ReplaceAll(line, fmt.Sprintf("{{%s}}", field.Name), field.Value)
 		}
 		_, err := out.WriteString(line + "\n")
 		if err != nil {
