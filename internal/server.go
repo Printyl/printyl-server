@@ -6,9 +6,12 @@ import (
 	"log/slog"
 	"net/http"
 	"path/filepath"
+	"time"
 
+	"github.com/docker/docker/client"
 	"github.com/gorilla/mux"
 	"github.com/gregor-gottschewski/printyl-server/internal/handlers"
+	"github.com/gregor-gottschewski/printyl-server/internal/scheduler"
 	"github.com/gregor-gottschewski/printyl-server/internal/service"
 )
 
@@ -28,18 +31,35 @@ type V1 struct {
 
 // NewAPI creates a new API instance with all endpoints defined for all versions
 func NewAPI() *API {
+	ctx := context.Background()
+
 	api := &API{
 		mainRouter: mux.NewRouter(),
 	}
 
 	docService := service.NewDocumentService(filepath.Join(Cfg.ApplicationPath, "documents"))
+	jobService := service.NewJobService()
+
+	dockerClient, err := createDockerClient()
+	if err != nil {
+		slog.ErrorContext(ctx, "failed to create Docker client", slog.String("error", err.Error()))
+		return nil
+	}
+
+	compileService := service.NewCompileService(dockerClient, jobService, Cfg.LatexImage, Cfg.ApplicationPath)
+	compileScheduler := scheduler.NewCompileScheduler(jobService, compileService, 10)
+	go func() {
+		if err := compileScheduler.Start(ctx, 2*time.Second); err != nil {
+			slog.ErrorContext(ctx, "compile scheduler stopped", slog.String("error", err.Error()))
+		}
+	}()
 
 	v1 := &V1{
 		router:           api.mainRouter.PathPrefix("/api/v1").Subrouter(),
-		documentsHandler: &handlers.DocumentsHandler{},
+		documentsHandler: &handlers.DocumentsHandler{ApplicationPath: Cfg.ApplicationPath},
 		statusHandler:    handlers.NewStatusHandler(),
 		documentsService: docService,
-		jobService:       service.NewJobService(),
+		jobService:       jobService,
 	}
 
 	v1.documentsHandler.DocumentsService = docService
@@ -47,7 +67,7 @@ func NewAPI() *API {
 
 	v1.registerDocumentsObservers()
 	if err := v1.documentsService.RefreshDocuments(); err != nil {
-		slog.ErrorContext(context.Background(), "Failed to initialize documents service v1", slog.String("error", err.Error()))
+		slog.ErrorContext(ctx, "Failed to initialize documents service v1", slog.String("error", err.Error()))
 		return nil
 	}
 
@@ -74,4 +94,8 @@ func (v1 *V1) createV1Endpoints() {
 // Note that DocumentService and all observers have to be initialized.
 func (v1 *V1) registerDocumentsObservers() {
 	v1.documentsService.AddDocumentsObserver(v1.documentsHandler)
+}
+
+func createDockerClient() (*client.Client, error) {
+	return client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 }

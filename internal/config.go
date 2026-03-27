@@ -14,6 +14,7 @@ func LoadConfig() error {
 }
 
 type Config struct {
-	ApplicationPath string `env:"APP_PATH" envDefault:"./printyl"`
+	ApplicationPath string `env:"APP_PATH" envDefault:"/Users/gregorgottschewski/Developer/Printyl/printyl-server/printyl"`
 	Port            uint   `env:"PORT" envDefault:"8080"`
+	LatexImage      string `env:"LATEX_IMAGE" envDefault:"texlive/texlive:latest"`
 }
