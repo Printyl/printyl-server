@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"sync"
 
 	"github.com/gorilla/mux"
@@ -28,6 +29,7 @@ type DocumentsHandler struct {
 	documents        []models.Document
 	DocumentsService DocumentServicer
 	JobService       JobServicer
+	ApplicationPath  string
 }
 
 // GetAllDocuments writes a list with all documents on system to client.
@@ -99,14 +101,17 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 		slog.ErrorContext(r.Context(), "error encoding response", slog.String("error", err.Error()))
 	}
 
-	preCompService := service.NewPreCompileService(*job)
+	preCompService := service.NewPreCompileService(*job, h.ApplicationPath)
 
 	if err := preCompService.CreateTempCompileDirectory(); err != nil {
 		slog.ErrorContext(r.Context(), "error creating temp compile directory", slog.String("error", err.Error()))
+		return
 	}
 
-	if err := preCompService.CopyTemplate(manifest.TexFile); err != nil {
+	documentPath := filepath.Join(h.ApplicationPath, "documents", id, manifest.TexFile)
+	if err := preCompService.CopyTemplate(documentPath); err != nil {
 		slog.ErrorContext(r.Context(), "error copying template", slog.String("error", err.Error()))
+		return
 	}
 
 	if err := preCompService.InsertPlaceholder(); err != nil {
