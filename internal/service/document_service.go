@@ -104,8 +104,10 @@ func (ds *DocumentService) RequiredFieldsFilled(manifest *models.DocumentManifes
 	fields := manifest.Template.Fields
 
 	fieldMap := make(map[string]struct{})
-	for _, f := range *genReq.Fields {
-		fieldMap[f.Name] = struct{}{}
+	if genReq != nil && genReq.Fields != nil {
+		for _, f := range *genReq.Fields {
+			fieldMap[f.Name] = struct{}{}
+		}
 	}
 
 	for key, val := range fields {
