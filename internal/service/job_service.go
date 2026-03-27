@@ -28,14 +28,21 @@ func (s *JobService) AddJob(manifest *models.DocumentManifest, generateRequest *
 	job := models.Job{
 		UUID:            uuid.New(),
 		CreatedAt:       time.Now(),
-		Status:          models.JobStatusPending,
+		Status:          models.JobStatusPreprocessing,
 		Manifest:        manifest,
 		GenerateRequest: generateRequest,
 	}
 	s.jobs[job.UUID.String()] = &job
-	*s.jobQueue = append(*s.jobQueue, job.UUID.String())
 
 	return &job
+}
+
+func (s *JobService) FinishPreprocessingJob(job *models.Job) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	*s.jobQueue = append(*s.jobQueue, job.UUID.String())
+	job.Status = models.JobStatusPending
 }
 
 func (s *JobService) SetStatus(jobUUID uuid.UUID, status models.JobStatus) {

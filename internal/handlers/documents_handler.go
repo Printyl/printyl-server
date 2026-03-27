@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gregor-gottschewski/printyl-server/internal/models"
 	"github.com/gregor-gottschewski/printyl-server/internal/service"
@@ -21,6 +22,8 @@ type DocumentServicer interface {
 
 type JobServicer interface {
 	AddJob(manifest *models.DocumentManifest, generateRequest *models.GenerateRequest) *models.Job
+	FinishPreprocessingJob(job *models.Job)
+	SetStatus(jobUUID uuid.UUID, status models.JobStatus)
 }
 
 // DocumentsHandler contains DocumentService for managing documents.
@@ -118,4 +121,5 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 		slog.ErrorContext(r.Context(), "error inserting placeholder", slog.String("error", err.Error()))
 	}
 
+	h.JobService.FinishPreprocessingJob(job)
 }
