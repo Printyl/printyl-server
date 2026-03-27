@@ -39,7 +39,7 @@ func NewCompileService(docker *client.Client, jobUpdater JobStatusUpdater, image
 
 	cs.containerConfig = &container.Config{
 		Image:      cs.imageName,
-		Cmd:        []string{"pdflatex", "-interaction=nonstopmode", "-no-shell-escape", "-halt-on-error", "--cap-drop all", "--security-opt=no-new-privileges", "--icc=false", "out.tex"},
+		Cmd:        []string{"pdflatex", "-interaction=nonstopmode", "-no-shell-escape", "-halt-on-error", "out.tex"},
 		WorkingDir: "/jobs",
 	}
 
@@ -117,6 +117,10 @@ func (c *CompileService) hostConfig(jobDir string) *container.HostConfig {
 				Target: "/jobs",
 			},
 		},
-		AutoRemove: false,
+		AutoRemove:     false,
+		NetworkMode:    "none",                             // no network access needed for pdflatex
+		ReadonlyRootfs: true,                               // container filesystem is read-only (job dir is the only writable mount)
+		CapDrop:        []string{"ALL"},                    // drop every Linux capability
+		SecurityOpt:    []string{"no-new-privileges:true"}, // prevent privilege escalation
 	}
 }
