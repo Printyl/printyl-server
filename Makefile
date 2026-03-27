@@ -36,13 +36,13 @@ out/bin:
 	$(GO_BUILD)
 
 lint: fmt download ## Lints all code with golangci-lint
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run
 
 lint-reports: out/lint.xml
 
 .PHONY: out/lint.xml
 out/lint.xml: out download
-	@go run github.com/golangci/golangci-lint/cmd/golangci-lint run ./... --out-format checkstyle | tee "$(@)"
+	@go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint run ./... --out-format checkstyle | tee "$(@)"
 
 govulncheck: ## Vulnerability detection using govulncheck
 	@go run golang.org/x/vuln/cmd/govulncheck ./...
@@ -63,7 +63,7 @@ out/report.json: out
 	@go test -count 1 ./... -coverprofile=out/cover.out --json | tee "$(@)"
 
 clean: ## Cleans up everything
-	@rm -rf bin out 
+	@rm -rf bin out
 
 docker: ## Builds docker image
 	docker buildx build --cache-to type=inline -t $(DOCKER_REPO):$(DOCKER_TAG) .

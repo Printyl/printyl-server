@@ -21,8 +21,6 @@ linters:
     - goconst # Inspects source code for security problems
     - gocyclo # Computes and checks the cyclomatic complexity of functions
     - err113 # Golang linter to check the errors handling expressions
-    - gofmt # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
-    - goimports # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
     - mnd # An analyzer to detect magic numbers.
     - goprintffuncname # Checks that printf-like functions are named with f at the end
     - gosec # Inspects source code for security problems
@@ -38,11 +36,16 @@ linters:
     - unconvert # Remove unnecessary type conversions
     - unparam # Reports unused function parameters
     - whitespace # Tool for detection of leading and trailing whitespace
+  settings:
+    funlen:
+      lines: 100
+      statements: 50
 
-linters-settings:
-  funlen:
-    lines: 100
-    statements: 50
+formatters:
+  # https://golangci-lint.run/usage/formatters/
+  enable:
+    - gofmt # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification
+    - goimports # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source
