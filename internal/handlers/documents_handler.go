@@ -76,7 +76,7 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 
 	var req models.GenerateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.ErrorContext(r.Context(), "error decoding request", slog.String("error", err.Error()))
+		slog.DebugContext(r.Context(), "error decoding request", slog.String("error", err.Error()))
 		http.Error(w, "error decoding request", http.StatusBadRequest)
 		return
 	}

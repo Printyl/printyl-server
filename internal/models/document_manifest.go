@@ -64,7 +64,7 @@ func FormResponseFromTemplate(template *Template) FormResponse {
 }
 
 type GenerateRequest struct {
-	Fields *[]GenerateField `json:"data"`
+	Fields []GenerateField `json:"data"`
 }
 
 type GenerateField struct {
