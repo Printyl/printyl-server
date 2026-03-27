@@ -25,7 +25,7 @@ func NewPreCompileService(job models.Job, applicationPath string) *PreCompileSer
 
 func (p *PreCompileService) CreateTempCompileDirectory() error {
 	tmp := filepath.Join(p.applicationPath, "jobs", p.Job.UUID.String())
-	if err := os.MkdirAll(tmp, 600); err != nil {
+	if err := os.MkdirAll(tmp, 0o755); err != nil {
 		return err
 	}
 	return nil
@@ -76,6 +76,10 @@ func (p *PreCompileService) InsertPlaceholder() error {
 	for scanner.Scan() {
 		line := scanner.Text()
 		for _, field := range *p.Job.GenerateRequest.Fields {
+			if len(field.Value) == 0 {
+				line = strings.ReplaceAll(line, fmt.Sprintf("{{%s}}", field.Name), "")
+				continue
+			}
 			line = strings.ReplaceAll(line, fmt.Sprintf("{{%s}}", field.Name), field.Value)
 		}
 		_, err := out.WriteString(line + "\n")
