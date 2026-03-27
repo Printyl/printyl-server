@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/gregor-gottschewski/printyl-server/internal/models"
@@ -55,7 +56,7 @@ func (ds *DocumentService) readStore(documents []os.DirEntry) map[string]*models
 			continue
 		}
 
-		doc, err := readDocumentManifest(ds.documentsPath, entry.Name())
+		doc, err := ds.GetManifest(entry.Name())
 		if err != nil {
 			slog.Error("could not load document", slog.String("document", entry.Name()), slog.String("error", err.Error()))
 			continue
@@ -72,9 +73,9 @@ func (ds *DocumentService) AddDocumentsObserver(observer models.DocumentObserver
 	ds.docObservers = append(ds.docObservers, observer)
 }
 
-// readDocumentManifest loads one document to the documentsPath by its entry name
-func readDocumentManifest(storePath string, entry string) (*models.DocumentManifest, error) {
-	path := filepath.Join(storePath, entry, "manifest.yaml")
+// GetManifest loads one document to the documentsPath by its entry name
+func (ds *DocumentService) GetManifest(id string) (*models.DocumentManifest, error) {
+	path := filepath.Join(ds.documentsPath, id, "manifest.yaml")
 
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -99,18 +100,20 @@ func (ds *DocumentService) notify() {
 	}
 }
 
-// GetManifest returns the document manifest file by parsing <application-root>/documents/<id>/manifest.yaml
-func (ds *DocumentService) GetManifest(id string) (*models.DocumentManifest, error) {
-	return readDocumentManifest(ds.documentsPath, id)
-}
-
 // RequiredFieldsFilled checks if all mandatory fields are filled by the client.
 func (ds *DocumentService) RequiredFieldsFilled(manifest *models.DocumentManifest, genReq *models.GenerateRequest) bool {
 	fields := manifest.Template.Fields
 
+	fieldMap := make(map[string]string)
+
+	for _, f := range genReq.Fields {
+		fieldMap[f.Name] = f.Value
+	}
+
 	for key, val := range fields {
 		if val.Mandatory {
-			if _, ok := genReq.Fields[key]; !ok {
+			v, ok := fieldMap[string(key)]
+			if !ok || strings.TrimSpace(v) == "" {
 				return false
 			}
 		}

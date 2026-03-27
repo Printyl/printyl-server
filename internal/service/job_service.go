@@ -9,26 +9,71 @@ import (
 )
 
 type JobService struct {
-	mu   sync.RWMutex
-	jobs map[string]*models.Job
+	mu       sync.Mutex
+	jobs     map[string]*models.Job
+	jobQueue *[]string
 }
 
 func NewJobService() *JobService {
 	return &JobService{
-		jobs: make(map[string]*models.Job),
+		jobs:     make(map[string]*models.Job),
+		jobQueue: new([]string),
 	}
 }
 
-func (s *JobService) AddJob() *models.Job {
+func (s *JobService) AddJob(manifest *models.DocumentManifest, generateRequest *models.GenerateRequest) *models.Job {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	job := models.Job{
-		UUID:      uuid.New(),
-		CreatedAt: time.Now(),
-		Status:    models.JobStatusPending,
+		UUID:            uuid.New(),
+		CreatedAt:       time.Now(),
+		Status:          models.JobStatusPreprocessing,
+		Manifest:        manifest,
+		GenerateRequest: generateRequest,
 	}
 	s.jobs[job.UUID.String()] = &job
 
 	return &job
+}
+
+func (s *JobService) FinishPreprocessingJob(job *models.Job) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	*s.jobQueue = append(*s.jobQueue, job.UUID.String())
+	job.Status = models.JobStatusPending
+}
+
+func (s *JobService) SetStatus(jobUUID uuid.UUID, status models.JobStatus) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	job, ok := s.jobs[jobUUID.String()]
+	if !ok {
+		return
+	}
+
+	job.Status = status
+}
+
+// Dequeue pops n elements from the queue as copy
+func (s *JobService) Dequeue(elements int) []models.Job {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	limit := elements
+	if limit > len(*s.jobQueue) {
+		limit = len(*s.jobQueue)
+	}
+
+	ids := (*s.jobQueue)[:limit]
+	*s.jobQueue = (*s.jobQueue)[limit:]
+
+	jobs := make([]models.Job, len(ids))
+	for i, id := range ids {
+		jobs[i] = *s.jobs[id]
+	}
+
+	return jobs
 }

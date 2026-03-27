@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/gregor-gottschewski/printyl-server/internal/models"
+	"github.com/gregor-gottschewski/printyl-server/internal/service"
 )
 
 // DocumentServicer defines the interface for document service operations.
@@ -18,7 +21,9 @@ type DocumentServicer interface {
 }
 
 type JobServicer interface {
-	AddJob() *models.Job
+	AddJob(manifest *models.DocumentManifest, generateRequest *models.GenerateRequest) *models.Job
+	FinishPreprocessingJob(job *models.Job)
+	SetStatus(jobUUID uuid.UUID, status models.JobStatus)
 }
 
 // DocumentsHandler contains DocumentService for managing documents.
@@ -27,6 +32,7 @@ type DocumentsHandler struct {
 	documents        []models.Document
 	DocumentsService DocumentServicer
 	JobService       JobServicer
+	ApplicationPath  string
 }
 
 // GetAllDocuments writes a list with all documents on system to client.
@@ -73,7 +79,7 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 
 	var req models.GenerateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		slog.ErrorContext(r.Context(), "error decoding request", slog.String("error", err.Error()))
+		slog.DebugContext(r.Context(), "error decoding request", slog.String("error", err.Error()))
 		http.Error(w, "error decoding request", http.StatusBadRequest)
 		return
 	}
@@ -90,11 +96,30 @@ func (h *DocumentsHandler) GenerateDocument(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	job := h.JobService.AddJob()
+	job := h.JobService.AddJob(manifest, &req)
 
 	response := models.JobResponse{UUID: job.UUID}
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		slog.ErrorContext(r.Context(), "error encoding response", slog.String("error", err.Error()))
 	}
+
+	preCompService := service.NewPreCompileService(*job, h.ApplicationPath)
+
+	if err := preCompService.CreateTempCompileDirectory(); err != nil {
+		slog.ErrorContext(r.Context(), "error creating temp compile directory", slog.String("error", err.Error()))
+		return
+	}
+
+	documentPath := filepath.Join(h.ApplicationPath, "documents", id, manifest.TexFile)
+	if err := preCompService.CopyTemplate(documentPath); err != nil {
+		slog.ErrorContext(r.Context(), "error copying template", slog.String("error", err.Error()))
+		return
+	}
+
+	if err := preCompService.InsertPlaceholder(); err != nil {
+		slog.ErrorContext(r.Context(), "error inserting placeholder", slog.String("error", err.Error()))
+	}
+
+	h.JobService.FinishPreprocessingJob(job)
 }

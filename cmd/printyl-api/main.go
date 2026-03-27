@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/gregor-gottschewski/printyl-server/internal"
 	// This controls the maxprocs environment variable in container runtimes.
@@ -42,18 +40,7 @@ func run() error {
 		return err
 	}
 
-	if err := createApi(); err != nil {
-		return err
-	}
-
-	// Block until we receive a termination signal
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	slog.InfoContext(ctx, "server shutting down")
-
-	return nil
+	return createApi()
 }
 
 // loadConfig loads application configuration
