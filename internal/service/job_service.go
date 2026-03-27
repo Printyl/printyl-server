@@ -38,11 +38,11 @@ func (s *JobService) AddJob(manifest *models.DocumentManifest, generateRequest *
 	return &job
 }
 
-func (s *JobService) SetStatus(uuid uuid.UUID, status models.JobStatus) {
+func (s *JobService) SetStatus(jobUUID uuid.UUID, status models.JobStatus) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	job, ok := s.jobs[uuid.String()]
+	job, ok := s.jobs[jobUUID.String()]
 	if !ok {
 		return
 	}
