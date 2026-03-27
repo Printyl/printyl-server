@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/gregor-gottschewski/printyl-server/internal/models"
@@ -103,15 +104,16 @@ func (ds *DocumentService) notify() {
 func (ds *DocumentService) RequiredFieldsFilled(manifest *models.DocumentManifest, genReq *models.GenerateRequest) bool {
 	fields := manifest.Template.Fields
 
-	fieldMap := make(map[string]struct{})
+	fieldMap := make(map[string]string)
 
 	for _, f := range genReq.Fields {
-		fieldMap[f.Name] = struct{}{}
+		fieldMap[f.Name] = f.Value
 	}
 
 	for key, val := range fields {
 		if val.Mandatory {
-			if _, ok := fieldMap[string(key)]; !ok {
+			v, ok := fieldMap[string(key)]
+			if !ok || strings.TrimSpace(v) == "" {
 				return false
 			}
 		}
