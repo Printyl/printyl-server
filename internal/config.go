@@ -17,4 +17,9 @@ type Config struct {
 	ApplicationPath string `env:"APP_PATH" envDefault:"./printyl"`
 	Port            uint   `env:"PORT" envDefault:"8080"`
 	LatexImage      string `env:"LATEX_IMAGE" envDefault:"texlive/texlive:latest"`
+
+	OIDCIssuerURL      string   `env:"OIDC_ISSUER_URL"`
+	OIDCClientID       string   `env:"OIDC_CLIENT_ID"`
+	AuthEnabled        bool     `env:"AUTH_ENABLED" envDefault:"true"`
+	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:","`
 }

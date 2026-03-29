@@ -15,6 +15,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/gorilla/mux"
 	"github.com/gregor-gottschewski/printyl-server/internal/handlers"
+	"github.com/gregor-gottschewski/printyl-server/internal/middleware"
 	"github.com/gregor-gottschewski/printyl-server/internal/scheduler"
 	"github.com/gregor-gottschewski/printyl-server/internal/service"
 )
@@ -42,6 +43,10 @@ func NewAPI() *API {
 		mainRouter:      mux.NewRouter(),
 		cancelScheduler: cancel,
 	}
+
+	// CORS is applied globally so that preflight OPTIONS requests are handled
+	// before authentication is checked.
+	api.mainRouter.Use(middleware.NewCORSMiddleware(Cfg.CORSAllowedOrigins))
 
 	docService := service.NewDocumentService(filepath.Join(Cfg.ApplicationPath, "documents"))
 	jobService := service.NewJobService()
@@ -81,7 +86,9 @@ func NewAPI() *API {
 		return nil
 	}
 
-	v1.createV1Endpoints()
+	if err := v1.createV1Endpoints(ctx, cancel); err != nil {
+		return nil
+	}
 
 	api.v1 = v1
 
@@ -123,11 +130,35 @@ func (api *API) Start() error {
 	return srv.Shutdown(shutdownCtx)
 }
 
-func (v1 *V1) createV1Endpoints() {
-	v1.router.HandleFunc("/status", v1.statusHandler.GetStatus).Methods("GET")
-	v1.router.HandleFunc("/documents", v1.documentsHandler.GetAllDocuments).Methods("GET")
-	v1.router.HandleFunc("/documents/{id}/form", v1.documentsHandler.GetDocumentForm).Methods("GET")
-	v1.router.HandleFunc("/documents/{id}/generate", v1.documentsHandler.GenerateDocument).Methods("POST")
+// createV1Endpoints registers all /api/v1 routes.
+// /status is public. All /documents routes sit behind the auth middleware
+// when AUTH_ENABLED=true.
+func (v1 *V1) createV1Endpoints(ctx context.Context, cancel context.CancelFunc) error {
+	// Public route — no authentication required.
+	v1.router.HandleFunc("/status", v1.statusHandler.GetStatus).Methods("GET", "OPTIONS")
+
+	// Protected subrouter for all document endpoints.
+	protected := v1.router.PathPrefix("").Subrouter()
+
+	if Cfg.AuthEnabled {
+		authMiddleware, err := middleware.NewAuthMiddleware(ctx, Cfg.OIDCIssuerURL, Cfg.OIDCClientID)
+		if err != nil {
+			cancel()
+			slog.ErrorContext(ctx, "failed to initialize OIDC provider", slog.String("error", err.Error()))
+			return err
+		}
+
+		protected.Use(authMiddleware)
+		slog.InfoContext(ctx, "auth middleware enabled", slog.String("issuer", Cfg.OIDCIssuerURL))
+	} else {
+		slog.WarnContext(ctx, "AUTH_ENABLED=false: all document endpoints are unprotected")
+	}
+
+	protected.HandleFunc("/documents", v1.documentsHandler.GetAllDocuments).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/documents/{id}/form", v1.documentsHandler.GetDocumentForm).Methods("GET", "OPTIONS")
+	protected.HandleFunc("/documents/{id}/generate", v1.documentsHandler.GenerateDocument).Methods("POST", "OPTIONS")
+
+	return nil
 }
 
 // registerDocumentsObservers registers all observers to DocumentService (v1)
