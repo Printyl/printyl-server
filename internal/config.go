@@ -20,6 +20,6 @@ type Config struct {
 
 	OIDCIssuerURL      string   `env:"OIDC_ISSUER_URL"`
 	OIDCClientID       string   `env:"OIDC_CLIENT_ID"`
-	AuthEnabled        bool     `env:"AUTH_ENABLED" envDefault:"true"`
+	AuthEnabled        bool     `env:"AUTH_ENABLED" envDefault:"false"`
 	CORSAllowedOrigins []string `env:"CORS_ALLOWED_ORIGINS" envSeparator:","`
 }
