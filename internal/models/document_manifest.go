@@ -34,33 +34,35 @@ type Template struct {
 // FormResponse represents the response by the server
 // It includes fields for every form entry.
 type FormResponse struct {
-	Fields map[FieldName]FieldsFormResponse `json:"fields"`
+	Fields []FieldsFormResponse `json:"fields"`
 }
 
 type FieldsFormResponse struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Length      int    `json:"length"`
-	Multiline   bool   `json:"multiline"`
-	Type        Type   `json:"type"`
+	UUID        FieldName `json:"uuid"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Length      int       `json:"length"`
+	Multiline   bool      `json:"multiline"`
+	Type        Type      `json:"type"`
 }
 
-func FormResponseFromTemplate(template *Template) FormResponse {
-	form := FormResponse{
-		Fields: make(map[FieldName]FieldsFormResponse),
-	}
+func FormResponseFromTemplate(template *Template) []FieldsFormResponse {
+	output := make([]FieldsFormResponse, 0, len(template.Fields))
 
 	for fieldName, field := range template.Fields {
-		form.Fields[fieldName] = FieldsFormResponse{
+		resp := &FieldsFormResponse{
+			UUID:        fieldName,
 			Name:        field.Name,
 			Description: field.Description,
 			Length:      field.Length,
 			Multiline:   field.Multiline,
 			Type:        field.Type,
 		}
+
+		output = append(output, *resp)
 	}
 
-	return form
+	return output
 }
 
 type GenerateRequest struct {
