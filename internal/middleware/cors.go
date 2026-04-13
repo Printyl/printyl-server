@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// NewCORSMiddleware creates a new middleware that sets CORS headers when enabled in configuration.
 func NewCORSMiddleware(allowedOrigins []string) mux.MiddlewareFunc {
 	allowed := make(map[string]struct{}, len(allowedOrigins))
 	for _, origin := range allowedOrigins {
@@ -18,6 +19,7 @@ func NewCORSMiddleware(allowedOrigins []string) mux.MiddlewareFunc {
 
 			if _, ok := allowed[origin]; ok {
 				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Add("Vary", "Origin")
 				w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 				w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 			}
